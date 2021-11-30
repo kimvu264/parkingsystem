@@ -20,6 +20,7 @@ public class TicketDAO {
     public DataBaseConfig dataBaseConfig = new DataBaseConfig();
 
     public boolean saveTicket(Ticket ticket){
+        //logger.error("saveTicket inTime="+ticket.getInTime()+" outTime=" + ticket.getOutTime());
         Connection con = null;
         try {
             con = dataBaseConfig.getConnection();
@@ -79,11 +80,37 @@ public class TicketDAO {
             ps.setInt(3,ticket.getId());
             ps.execute();
             return true;
-        }catch (Exception ex){
+        } catch (Exception ex){
             logger.error("Error saving ticket info",ex);
-        }finally {
+        } finally {
             dataBaseConfig.closeConnection(con);
         }
         return false;
+    }
+
+    public boolean isRegularCustomer(String vehicleRegNumber) {
+        Connection con = null;
+        PreparedStatement ps = null; // Initialisation
+        ResultSet rs = null; // Initialisation
+        boolean isRecurring = false;
+        try {
+            con = dataBaseConfig.getConnection();
+            ps = con.prepareStatement(DBConstants.RECURRING_USERS); // DP
+            ps.setString(1, vehicleRegNumber);
+            rs = ps.executeQuery();
+            // True si la DB récupére les tickets du véhicule
+            if (rs.next()) {
+                isRecurring = rs.getBoolean(1);
+            }
+
+        } catch (Exception ex) {
+            logger.error("Error recurring users info", ex);
+
+        } finally {
+            dataBaseConfig.closeResultSet(rs);
+            dataBaseConfig.closePreparedStatement(ps); // DP
+            dataBaseConfig.closeConnection(con);
+        }
+        return isRecurring;
     }
 }
