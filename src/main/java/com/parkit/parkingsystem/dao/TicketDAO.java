@@ -20,7 +20,6 @@ public class TicketDAO {
     public DataBaseConfig dataBaseConfig = new DataBaseConfig();
 
     public boolean saveTicket(Ticket ticket){
-        //logger.error("saveTicket inTime="+ticket.getInTime()+" outTime=" + ticket.getOutTime());
         Connection con = null;
         try {
             con = dataBaseConfig.getConnection();
@@ -31,13 +30,14 @@ public class TicketDAO {
             ps.setString(2, ticket.getVehicleRegNumber());
             ps.setDouble(3, ticket.getPrice());
             ps.setTimestamp(4, new Timestamp(ticket.getInTime().getTime()));
-            ps.setTimestamp(5, (ticket.getOutTime() == null)?null: (new Timestamp(ticket.getOutTime().getTime())) );
+            ps.setTimestamp(5, (ticket.getOutTime() == null) ? null : (new Timestamp(ticket.getOutTime().getTime())) );
             return ps.execute();
-        }catch (Exception ex){
+        } catch (Exception ex){
             logger.error("Error fetching next available slot",ex);
-        }finally {
-            dataBaseConfig.closeConnection(con);
             return false;
+        } finally {
+            dataBaseConfig.closeConnection(con);
+            //return false;
         }
     }
 
@@ -88,14 +88,14 @@ public class TicketDAO {
         return false;
     }
 
-    public boolean isRegularCustomer(String vehicleRegNumber) {
+    public boolean isRecurringCustomer (String vehicleRegNumber) {
         Connection con = null;
-        PreparedStatement ps = null; // Initialisation
-        ResultSet rs = null; // Initialisation
+        PreparedStatement ps = null;
+        ResultSet rs = null;
         boolean isRecurring = false;
         try {
             con = dataBaseConfig.getConnection();
-            ps = con.prepareStatement(DBConstants.RECURRING_USERS); // DP
+            ps = con.prepareStatement(DBConstants.RECURRING_USERS);
             ps.setString(1, vehicleRegNumber);
             rs = ps.executeQuery();
             // True si la DB récupére les tickets du véhicule

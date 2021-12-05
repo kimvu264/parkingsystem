@@ -10,16 +10,21 @@ import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.FareCalculatorService;
 import com.parkit.parkingsystem.service.ParkingService;
 import com.parkit.parkingsystem.util.InputReaderUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -29,6 +34,7 @@ public class ParkingDataBaseIT {
 
     private static final String VehicleRegNumber = "ABC123";
 
+    private static final Logger logger = LogManager.getLogger("ParkingDataBaseIT");
     private static final DataBaseTestConfig dataBaseTestConfig = new DataBaseTestConfig();
     private static DataBasePrepareService dataBasePrepareService;
 
@@ -76,7 +82,6 @@ public class ParkingDataBaseIT {
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         parkingService.processIncomingVehicle();
 
-        dataBasePrepareService.clearDataBaseEntries();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR, false);
         Ticket ticket = new Ticket();
         ticket.setParkingSpot(parkingSpot);
@@ -90,6 +95,7 @@ public class ParkingDataBaseIT {
 
         ParkingService parkingServiceOut = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         parkingServiceOut.processExitingVehicle();
-        Assertions.assertEquals(Math.round(1.5 * 0.95 * 100.0) / 100.0, ticket.getPrice());
+        Assertions.assertEquals(Math.round(1.5 * 100.0) / 100.0, ticket.getPrice());
+
     }
 }

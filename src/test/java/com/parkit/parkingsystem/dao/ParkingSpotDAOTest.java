@@ -25,10 +25,13 @@ public class ParkingSpotDAOTest
 
 	@Mock
 	private static DataBaseTestConfig dataBaseTestConfig;
+
 	@Mock
 	private static Connection con;
+
 	@Mock
 	private static PreparedStatement ps;
+
 	@Mock
 	private static ResultSet rs;
 

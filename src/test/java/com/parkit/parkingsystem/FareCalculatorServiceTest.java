@@ -6,12 +6,17 @@ import com.parkit.parkingsystem.dao.TicketDAO;
 import com.parkit.parkingsystem.model.ParkingSpot;
 import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.FareCalculatorService;
+import javafx.beans.binding.When;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -20,15 +25,19 @@ import java.util.Date;
 
 public class FareCalculatorServiceTest {
 
-    private static FareCalculatorService fareCalculatorService;
+    //private static FareCalculatorService fareCalculatorService;
     private Ticket ticket;
 
     @Mock
     private static TicketDAO ticketDAO;
 
+    @Mock
+    private static FareCalculatorService fareCalculatorService;
+
     @BeforeAll
     private static void setUp() {
         ticketDAO = mock(TicketDAO.class);
+        fareCalculatorService = mock(FareCalculatorService.class);
         fareCalculatorService = new FareCalculatorService(ticketDAO);
     }
 
@@ -172,14 +181,16 @@ public class FareCalculatorServiceTest {
         ticket.setParkingSpot(parkingSpot);
         ticket.setVehicleRegNumber("test");
 
-        when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+        when(ticketDAO.isRecurringCustomer(anyString())).thenReturn(true);
 
-        fareCalculatorService.calculateFare(this.ticket);
-        assertEquals(Math.round(2 * 0.95 * Fare.CAR_RATE_PER_HOUR * 100.0)/ 100.0, this.ticket.getPrice());
+        fareCalculatorService.calculateFare(ticket);
+
+        assertEquals(Math.round(2 * 0.95 * Fare.CAR_RATE_PER_HOUR * 100.0)/ 100.0, ticket.getPrice());
     }
 
     @Test
     public void calculateFareBikeWithDiscount() {
+        // GIVEN a bike parking for 45 minutes
         Date inTime = new Date();
         inTime.setTime(System.currentTimeMillis() - (45 * 60 * 1000)); // 45 minutes parking with discount 5% should give 0.71
         Date outTime = new Date();
@@ -190,9 +201,13 @@ public class FareCalculatorServiceTest {
         ticket.setParkingSpot(parkingSpot);
         ticket.setVehicleRegNumber("test");
 
-        when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+        // MOCK always return true so this customer is always a recurring one
+        when(ticketDAO.isRecurringCustomer(anyString())).thenReturn(true);
 
-        fareCalculatorService.calculateFare(this.ticket);
+        // WHEN calculating fare for this customer
+        fareCalculatorService.calculateFare(ticket);
+
+        // THEN his / her fare should include discount.
         assertEquals(Math.round(0.75 * 0.95 * Fare.BIKE_RATE_PER_HOUR *100.0) / 100.0, ticket.getPrice());
     }
 

@@ -15,7 +15,7 @@ public class ParkingService {
 
     private static final Logger logger = LogManager.getLogger("ParkingService");
 
-    private static FareCalculatorService fareCalculatorService;
+    private static FareCalculatorService fareCalculatorService = new FareCalculatorService();
 
     private InputReaderUtil inputReaderUtil;
     private ParkingSpotDAO parkingSpotDAO;
@@ -25,7 +25,7 @@ public class ParkingService {
         this.inputReaderUtil = inputReaderUtil;
         this.parkingSpotDAO = parkingSpotDAO;
         this.ticketDAO = ticketDAO;
-        fareCalculatorService = new FareCalculatorService(ticketDAO);
+        //fareCalculatorService = new FareCalculatorService(ticketDAO);
     }
 
     public void processIncomingVehicle() {
@@ -46,13 +46,13 @@ public class ParkingService {
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
                 // Create ticket for user recurring
-                Ticket userRecurring = ticketDAO.getTicket(ticket.getVehicleRegNumber());
+                boolean userRecurring = ticketDAO.isRecurringCustomer(vehicleRegNumber);
                 // If userRecurring existed, ticket get price discount
-                ticket.setDiscount (userRecurring != null);
+                ticket.setDiscount(userRecurring);
                 ticketDAO.saveTicket(ticket);
                 System.out.println("Generated Ticket and saved in DB");
                 // if client is recurring => show message
-                if (userRecurring != null)
+                if (userRecurring)
                     System.out.println("Welcome back! As a recurring user of our parking lot, you'll benefit from a 5% discount");
                 System.out.println("Please park your vehicle in spot number:"+parkingSpot.getId());
                 System.out.println("Recorded in-time for vehicle number:"+vehicleRegNumber+" is:"+inTime);
@@ -68,7 +68,7 @@ public class ParkingService {
     }
 
     public ParkingSpot getNextParkingNumberIfAvailable(){
-        int parkingNumber;
+        int parkingNumber = 0;
         ParkingSpot parkingSpot = null;
         try{
             ParkingType parkingType = getVehicleType();
@@ -78,9 +78,9 @@ public class ParkingService {
             }else{
                 throw new Exception("Error fetching parking number from DB. Parking slots might be full");
             }
-        }catch(IllegalArgumentException ie){
+        } catch(IllegalArgumentException ie){
             logger.error("Error parsing user input for type of vehicle", ie);
-        }catch(Exception e){
+        } catch(Exception e){
             logger.error("Error fetching next available parking slot", e);
         }
         return parkingSpot;
